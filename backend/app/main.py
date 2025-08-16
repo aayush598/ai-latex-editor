@@ -8,6 +8,7 @@ from app.api.routes_references import router as references_router
 from app.api.routes_math import router as math_router
 from app.api.routes_figures import router as figures_router
 from app.api.routes_accessibility import router as accessibility_router
+from app.api.routes_collaboration import router as collab_router
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -20,6 +21,7 @@ app.include_router(references_router)
 app.include_router(math_router)
 app.include_router(figures_router)
 app.include_router(accessibility_router)
+app.include_router(collab_router)
 
 @app.get("/")
 def root():
