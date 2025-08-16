@@ -5,6 +5,7 @@ from app.api.routes_documents import router as documents_router
 from app.api.routes_ai import router as ai_router
 from app.api.routes_compile import router as compile_router
 from app.api.routes_references import router as references_router
+from app.api.routes_math import router as math_router
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -14,6 +15,7 @@ app.include_router(documents_router)
 app.include_router(ai_router)
 app.include_router(compile_router)
 app.include_router(references_router)
+app.include_router(math_router)
 
 @app.get("/")
 def root():
