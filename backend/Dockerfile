@@ -1,9 +1,10 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app/backend
 
 # Install system dependencies
+RUN apt-get update && apt-get install -y curl
 RUN curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net |sh
 
 
