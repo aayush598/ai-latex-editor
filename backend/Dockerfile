@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Set working directory
-WORKDIR /app/backend
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y curl
