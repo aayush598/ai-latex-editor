@@ -4,7 +4,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl texlive-latex-base texlive-fonts-recommended texlive-pictures texlive-latex-extra
 RUN curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net |sh
 
 
