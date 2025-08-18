@@ -18,7 +18,8 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
-    "https://ai-latex-editor.vercel.app"
+    "https://ai-latex-editor.vercel.app",
+    "https://ai-latex-editor.vercel.app/",
 ]
 
 app.add_middleware(
