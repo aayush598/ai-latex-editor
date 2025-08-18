@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes_health import router as health_router
 from app.api.routes_documents import router as documents_router
@@ -11,6 +12,21 @@ from app.api.routes_accessibility import router as accessibility_router
 from app.api.routes_collaboration import router as collab_router
 
 app = FastAPI(title=settings.APP_NAME)
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,          # or ["*"] to allow all
+    allow_credentials=True,
+    allow_methods=["*"],            # allow GET, POST, PUT, DELETE, OPTIONS, etc.
+    allow_headers=["*"],            # allow all headers
+)
 
 # Register routes
 app.include_router(health_router, tags=["Health"])
