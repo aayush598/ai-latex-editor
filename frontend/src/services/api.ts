@@ -1,4 +1,4 @@
-const API_BASE = 'https://ai-latex-editor.onrender.com/';
+const API_BASE = 'https://ai-latex-editor.onrender.com';
 
 class ApiService {
   private async request<T>(
