@@ -14,16 +14,15 @@
 ---
 
 ## ✨ Features
-
-✅ **Document Management** – Create, edit, delete, and organize LaTeX projects.
-✅ **AI Assistant** – Generate LaTeX code, explain snippets, and auto-fix errors.
-✅ **PDF Compilation** – Compile LaTeX into PDFs safely in a sandboxed environment.
-✅ **Math Intelligence** – Equation verification, symbolic derivations, and unit checks.
-✅ **Figures & Tables** – Auto-generate LaTeX tables, plots, and TikZ diagrams.
-✅ **References & Citations** – Fetch and validate BibTeX from DOI/arXiv.
-✅ **Accessibility** – Alt text generation, color-blind compliance, and template validation.
-✅ **Collaboration Tools** – Document diffs, AI-assisted merging, inline comments.
-✅ **Scalable Backend** – Job queues, caching, observability, autoscaling, and failover-ready.
+- ✅ **Document Management** – Create, edit, delete, and organize LaTeX projects.
+- ✅ **AI Assistant** – Generate LaTeX code, explain snippets, and auto-fix errors.
+- ✅ **PDF Compilation** – Compile LaTeX into PDFs safely in a sandboxed environment.
+- ✅ **Math Intelligence** – Equation verification, symbolic derivations, and unit checks.
+- ✅ **Figures & Tables** – Auto-generate LaTeX tables, plots, and TikZ diagrams.
+- ✅ **References & Citations** – Fetch and validate BibTeX from DOI/arXiv.
+- ✅ **Accessibility** – Alt text generation, color-blind compliance, and template validation.
+- ✅ **Collaboration Tools** – Document diffs, AI-assisted merging, inline comments.
+- ✅ **Scalable Backend** – Job queues, caching, observability, autoscaling, and failover-ready.
 
 ---
 
