@@ -17,6 +17,72 @@ function App() {
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+      if (!ctrlOrCmd) return;
+
+      // Save (Ctrl+S / Cmd+S)
+      if (e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveDocument();
+      }
+
+      // Compile (Ctrl+Enter / Cmd+Enter)
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleCompile();
+      }
+
+      // New file (Ctrl+N / Cmd+N)
+      if (e.altKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        handleNewDocument();
+      }
+
+      // Rename file (Ctrl+R / Cmd+R)
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        const newTitle = prompt('Enter new file name:', title);
+        if (newTitle) {
+          setTitle(newTitle);
+          setHasUnsavedChanges(true);
+        }
+      }
+
+      // Delete file (Ctrl+Shift+D / Cmd+Shift+D)
+      if (e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        if (currentDocument && confirm(`Delete "${title}"? This cannot be undone.`)) {
+          apiService.deleteDocument(currentDocument.id).then(() => {
+            setCurrentDocument(null);
+            setContent('');
+            setTitle('Untitled Document');
+            setCompileResult(null);
+          });
+        }
+      }
+
+      // Search file (Ctrl+F / Cmd+F)
+      if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        const query = prompt('Search for file name:');
+        if (query) {
+          // A placeholder: you'd hook this into your sidebar search logic
+          console.log('Searching for file:', query);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentDocument, title, content]);
+
+
+
   // Initialize with default LaTeX template
   useEffect(() => {
     if (!currentDocument && !content) {
