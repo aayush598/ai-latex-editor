@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Play, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Play, AlertCircle } from 'lucide-react';
 
 interface LaTeXEditorProps {
   content: string;
@@ -17,6 +17,8 @@ export const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
   hasErrors,
 }) => {
   const [lineNumbers, setLineNumbers] = useState<number[]>([]);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
 
   const updateLineNumbers = useCallback((text: string) => {
     const lines = text.split('\n').length;
@@ -39,13 +41,20 @@ export const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
       const target = e.target as HTMLTextAreaElement;
       const start = target.selectionStart;
       const end = target.selectionEnd;
-      const newContent = content.substring(0, start) + '  ' + content.substring(end);
+      const newContent =
+        content.substring(0, start) + '  ' + content.substring(end);
       onChange(newContent);
-      
-      // Reset cursor position
+
       setTimeout(() => {
         target.selectionStart = target.selectionEnd = start + 2;
       }, 0);
+    }
+  };
+
+  // scroll sync
+  const handleScroll = () => {
+    if (lineRef.current && textRef.current) {
+      lineRef.current.scrollTop = textRef.current.scrollTop;
     }
   };
 
@@ -79,24 +88,34 @@ export const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-1 relative">
-        <div className="w-12 bg-gray-100 border-r border-gray-200 py-4 text-right">
-          {lineNumbers.map((num) => (
-            <div
-              key={num}
-              className="px-2 text-xs text-gray-400 leading-6 select-none"
-            >
-              {num}
-            </div>
-          ))}
+      {/* scrollable editor */}
+      <div className="flex flex-1 relative overflow-hidden">
+        {/* line numbers */}
+        <div
+          ref={lineRef}
+          className="w-12 bg-gray-100 border-r border-gray-200 text-right overflow-hidden"
+        >
+          <div className="py-4">
+            {lineNumbers.map((num) => (
+              <div
+                key={num}
+                className="px-2 text-xs text-gray-400 leading-6 select-none"
+              >
+                {num}
+              </div>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex-1 relative">
+
+        {/* textarea */}
+        <div className="flex-1 relative overflow-auto">
           <textarea
+            ref={textRef}
             value={content}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
-            className="w-full h-full p-4 font-mono text-sm border-none outline-none resize-none bg-white"
+            onScroll={handleScroll}
+            className="w-full min-h-full p-4 font-mono text-sm border-none outline-none resize-none bg-white"
             placeholder="Start typing your LaTeX document here..."
             spellCheck={false}
           />
