@@ -1,3 +1,4 @@
+import re
 from app.services.ai_service import client
 from app.schemas.compile_schema import FixErrorRequest
 
@@ -10,6 +11,13 @@ def parse_log(log: str) -> str:
         if "!" in line or "Error" in line:
             errors.append(line.strip())
     return "\n".join(errors) if errors else log
+
+def clean_code_blocks(text: str) -> str:
+    """
+    Remove markdown-style code fences such as ```latex, ```json, etc.
+    """
+    # Regex removes ``` followed by optional language (letters) and the trailing ```
+    return re.sub(r"```(?:\w+)?\s*|```", "", text).strip()
 
 def fix_errors(request: FixErrorRequest) -> dict:
     """
@@ -25,7 +33,8 @@ def fix_errors(request: FixErrorRequest) -> dict:
         )
     )
 
+    cleaned = clean_code_blocks(response.text.strip())
     return {
-        "fixed_content": response.text.strip(),
+        "fixed_content": cleaned,
         "explanation": f"Fixed based on errors: {parsed_errors}"
     }
