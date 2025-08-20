@@ -12,6 +12,8 @@ RUN curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net |sh
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN python app/models/document.py
+
 # Copy app
 COPY . .
 
