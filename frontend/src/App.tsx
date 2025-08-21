@@ -1,26 +1,28 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { DocumentSidebar } from './components/DocumentSidebar';
 import { LaTeXEditor } from './components/LaTeXEditor';
 import { PDFViewer } from './components/PDFViewer';
 import { AIAssistant } from './components/AIAssistant';
 import { ResizablePanes } from './components/ResizablePanes';
-import { apiService } from './services/api';
-import type { Document, CompileResponse } from './types/api';
-import { useKeyboardShortcuts } from './components/useKeyboardShortcuts';
-
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useDocumentHandlers } from './hooks/useDocumentHandlers';
 
 function App() {
-  const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
-  const [content, setContent] = useState('');
-  const [title, setTitle] = useState('Untitled Document');
-  const [compileResult, setCompileResult] = useState<CompileResponse | null>(null);
-  const [compiling, setCompiling] = useState(false);
-  const [fixingErrors, setFixingErrors] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const {
+    state: { currentDocument, content, title, compileResult, compiling, fixingErrors, hasUnsavedChanges },
+    setters: { setTitle, setContent, setCurrentDocument, setCompileResult, setHasUnsavedChanges },
+    handlers: {
+      handleDocumentSelect,
+      handleNewDocument,
+      saveDocument,
+      handleContentChange,
+      handleCompile,
+      handleFixErrors,
+      handleInsertCode,
+    },
+  } = useDocumentHandlers();
 
-  
-  // Initialize with default LaTeX template
+  // Inject default template if no doc
   useEffect(() => {
     if (!currentDocument && !content) {
       setContent(`\\documentclass{article}
@@ -55,140 +57,9 @@ Conclude your document here.
 
 \\end{document}`);
     }
-  }, [currentDocument, content]);
+  }, [currentDocument, content, setContent]);
 
-  const handleDocumentSelect = async (doc: Document) => {
-    setCurrentDocument(doc);
-    setContent(doc.content);
-    setTitle(doc.title);
-    setHasUnsavedChanges(false);
-    setCompileResult(null);
-  };
-
-  const handleNewDocument = () => {
-    setCurrentDocument(null);
-    setTitle('Untitled Document');
-    setContent(`\\documentclass{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{amsmath}
-
-\\title{New Document}
-\\author{Your Name}
-\\date{\\today}
-
-\\begin{document}
-\\maketitle
-
-\\section{Introduction}
-Start writing your document here...
-
-\\end{document}`);
-    setHasUnsavedChanges(false);
-    setCompileResult(null);
-  };
-
-  const saveDocument = useCallback(async () => {
-    try {
-      if (currentDocument) {
-        await apiService.updateDocument(currentDocument.id, {
-          title,
-          content,
-        });
-        setCurrentDocument({ ...currentDocument, title, content });
-      } else {
-        const newDoc = await apiService.createDocument({
-          title,
-          content,
-        });
-        setCurrentDocument(newDoc);
-      }
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Failed to save document:', error);
-    }
-  }, [currentDocument, title, content]);
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    setHasUnsavedChanges(true);
-
-    // Auto-save after 2 seconds of inactivity
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-    
-    const timeout = setTimeout(() => {
-      saveDocument();
-    }, 2000);
-    
-    setAutoSaveTimeout(timeout);
-  };
-
-  const handleCompile = async () => {
-    setCompiling(true);
-    
-    try {
-      const result = await apiService.compileDocument(content);
-      setCompileResult(result);
-    } catch (error) {
-      console.error('Compilation failed:', error);
-      setCompileResult({
-        pdf_base64: '',
-        error_log: error instanceof Error ? error.message : 'Compilation failed',
-      });
-    } finally {
-      setCompiling(false);
-    }
-  };
-
-  const handleFixErrors = async () => {
-    if (!compileResult?.error_log) return;
-
-    setFixingErrors(true);
-    
-    try {
-      const result = await apiService.fixErrors({
-        content,
-        error_log: compileResult.error_log,
-      });
-      
-      setContent(result.fixed_content);
-      setHasUnsavedChanges(true);
-      
-      // Auto-compile after fixing errors
-      setTimeout(() => {
-        handleCompile();
-      }, 500);
-    } catch (error) {
-      console.error('Failed to fix errors:', error);
-    } finally {
-      setFixingErrors(false);
-    }
-  };
-
-  const handleInsertCode = (code: string) => {
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.substring(0, start) + code + content.substring(end);
-      setContent(newContent);
-      setHasUnsavedChanges(true);
-      
-      // Focus back to textarea and set cursor position
-      setTimeout(() => {
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + code.length;
-      }, 0);
-    } else {
-      // Fallback: append to end
-      setContent(prev => prev + '\n\n' + code);
-      setHasUnsavedChanges(true);
-    }
-  };
-
-
-  /// --- finally call the hook after handlers exist ---
+  // keyboard shortcuts
   useKeyboardShortcuts({
     currentDocument,
     title,
@@ -202,7 +73,7 @@ Start writing your document here...
     handleCompile,
     handleNewDocument,
   });
-  
+
   return (
  <div className="h-screen bg-gray-100 flex overflow-hidden">
   <DocumentSidebar
