@@ -6,6 +6,7 @@ import { AIAssistant } from './components/AIAssistant';
 import { ResizablePanes } from './components/ResizablePanes';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDocumentHandlers } from './hooks/useDocumentHandlers';
+import { DEFAULT_APP_TEMPLATE } from './constants/newDocumentTemplate';
 
 function App() {
   const {
@@ -25,37 +26,7 @@ function App() {
   // Inject default template if no doc
   useEffect(() => {
     if (!currentDocument && !content) {
-      setContent(`\\documentclass{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{amsmath}
-\\usepackage{amsfonts}
-\\usepackage{amssymb}
-
-\\title{Your Document Title}
-\\author{Your Name}
-\\date{\\today}
-
-\\begin{document}
-
-\\maketitle
-
-\\section{Introduction}
-
-Write your introduction here.
-
-\\section{Main Content}
-
-Your main content goes here. You can use mathematical formulas like $E = mc^2$ inline, or display equations:
-
-\\begin{equation}
-    \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
-\\end{equation}
-
-\\section{Conclusion}
-
-Conclude your document here.
-
-\\end{document}`);
+      setContent(DEFAULT_APP_TEMPLATE);
     }
   }, [currentDocument, content, setContent]);
 

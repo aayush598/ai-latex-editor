@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { apiService } from '../services/api';
 import type { Document, CompileResponse } from '../types/api';
+import { NEW_DOCUMENT_TEMPLATE } from '../constants/newDocumentTemplate';
 
 export function useDocumentHandlers() {
   const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
@@ -23,21 +24,7 @@ export function useDocumentHandlers() {
   const handleNewDocument = () => {
     setCurrentDocument(null);
     setTitle('Untitled Document');
-    setContent(`\\documentclass{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{amsmath}
-
-\\title{New Document}
-\\author{Your Name}
-\\date{\\today}
-
-\\begin{document}
-\\maketitle
-
-\\section{Introduction}
-Start writing your document here...
-
-\\end{document}`);
+    setContent(NEW_DOCUMENT_TEMPLATE);
     setHasUnsavedChanges(false);
     setCompileResult(null);
   };
