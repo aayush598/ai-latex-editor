@@ -16,40 +16,21 @@ function App() {
   const [fixingErrors, setFixingErrors] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // 👈 Toggle state
 
-  // Initialize with default LaTeX template
+  // Default template
   useEffect(() => {
     if (!currentDocument && !content) {
       setContent(`\\documentclass{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage{amsmath}
-\\usepackage{amsfonts}
-\\usepackage{amssymb}
-
 \\title{Your Document Title}
 \\author{Your Name}
 \\date{\\today}
-
 \\begin{document}
-
 \\maketitle
-
 \\section{Introduction}
-
 Write your introduction here.
-
-\\section{Main Content}
-
-Your main content goes here. You can use mathematical formulas like $E = mc^2$ inline, or display equations:
-
-\\begin{equation}
-    \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
-\\end{equation}
-
-\\section{Conclusion}
-
-Conclude your document here.
-
 \\end{document}`);
     }
   }, [currentDocument, content]);
@@ -68,17 +49,13 @@ Conclude your document here.
     setContent(`\\documentclass{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage{amsmath}
-
 \\title{New Document}
 \\author{Your Name}
 \\date{\\today}
-
 \\begin{document}
 \\maketitle
-
 \\section{Introduction}
 Start writing your document here...
-
 \\end{document}`);
     setHasUnsavedChanges(false);
     setCompileResult(null);
@@ -87,16 +64,10 @@ Start writing your document here...
   const saveDocument = useCallback(async () => {
     try {
       if (currentDocument) {
-        await apiService.updateDocument(currentDocument.id, {
-          title,
-          content,
-        });
+        await apiService.updateDocument(currentDocument.id, { title, content });
         setCurrentDocument({ ...currentDocument, title, content });
       } else {
-        const newDoc = await apiService.createDocument({
-          title,
-          content,
-        });
+        const newDoc = await apiService.createDocument({ title, content });
         setCurrentDocument(newDoc);
       }
       setHasUnsavedChanges(false);
@@ -109,30 +80,18 @@ Start writing your document here...
     setContent(newContent);
     setHasUnsavedChanges(true);
 
-    // Auto-save after 2 seconds of inactivity
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-    
-    const timeout = setTimeout(() => {
-      saveDocument();
-    }, 2000);
-    
-    setAutoSaveTimeout(timeout);
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    setAutoSaveTimeout(setTimeout(saveDocument, 2000));
   };
 
   const handleCompile = async () => {
     setCompiling(true);
-    
     try {
       const result = await apiService.compileDocument(content);
       setCompileResult(result);
     } catch (error) {
       console.error('Compilation failed:', error);
-      setCompileResult({
-        pdf_base64: '',
-        error_log: error instanceof Error ? error.message : 'Compilation failed',
-      });
+      setCompileResult({ pdf_base64: '', error_log: 'Compilation failed' });
     } finally {
       setCompiling(false);
     }
@@ -140,22 +99,12 @@ Start writing your document here...
 
   const handleFixErrors = async () => {
     if (!compileResult?.error_log) return;
-
     setFixingErrors(true);
-    
     try {
-      const result = await apiService.fixErrors({
-        content,
-        error_log: compileResult.error_log,
-      });
-      
+      const result = await apiService.fixErrors({ content, error_log: compileResult.error_log });
       setContent(result.fixed_content);
       setHasUnsavedChanges(true);
-      
-      // Auto-compile after fixing errors
-      setTimeout(() => {
-        handleCompile();
-      }, 500);
+      setTimeout(handleCompile, 500);
     } catch (error) {
       console.error('Failed to fix errors:', error);
     } finally {
@@ -164,97 +113,91 @@ Start writing your document here...
   };
 
   const handleInsertCode = (code: string) => {
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.substring(0, start) + code + content.substring(end);
-      setContent(newContent);
-      setHasUnsavedChanges(true);
-      
-      // Focus back to textarea and set cursor position
-      setTimeout(() => {
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + code.length;
-      }, 0);
-    } else {
-      // Fallback: append to end
-      setContent(prev => prev + '\n\n' + code);
-      setHasUnsavedChanges(true);
-    }
+    setContent((prev) => prev + '\n\n' + code);
+    setHasUnsavedChanges(true);
   };
 
   return (
- <div className="h-screen bg-gray-100 flex overflow-hidden">
-  <DocumentSidebar
-    currentDocument={currentDocument}
-    onSelectDocument={handleDocumentSelect}
-    onNewDocument={handleNewDocument}
-  />
-  
-  <div className="flex flex-col flex-1">
-    {/* Header fixed height */}
-    <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold text-gray-900">AI LaTeX Editor</h1>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            setHasUnsavedChanges(true);
-          }}
-          className="text-lg font-medium text-gray-700 bg-transparent border-none outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 transition-colors"
+    <div className="h-screen bg-gray-100 flex overflow-hidden">
+      {/* Sidebar with toggle */}
+      <div
+        className={`transition-all duration-300 border-r border-gray-200 bg-white ${
+          sidebarOpen ? 'w-64' : 'w-0'
+        } overflow-hidden`}
+      >
+        <DocumentSidebar
+          currentDocument={currentDocument}
+          onSelectDocument={handleDocumentSelect}
+          onNewDocument={handleNewDocument}
         />
-        {hasUnsavedChanges && (
-          <span className="text-sm text-orange-600 font-medium">
-            Unsaved changes
-          </span>
-        )}
       </div>
-      
-      <div className="flex items-center gap-3">
-        <button
-          onClick={saveDocument}
-          className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-        >
-          Save
-        </button>
-      </div>
-    </header>
 
-    {/* Content area fills rest of screen */}
-    <div className="flex flex-1 overflow-hidden">
-      <ResizablePanes
-        left={
-          <LaTeXEditor
-            content={content}
-            onChange={handleContentChange}
-            onCompile={handleCompile}
-            compiling={compiling}
-            hasErrors={!!(compileResult?.error_log && compileResult.error_log.trim())}
-          />
-        }
-        right={
+      <div className="flex flex-col flex-1">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-4">
+            {/* Toggle Button 👇 */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+            >
+              {sidebarOpen ? '←' : '→'}
+            </button>
+
+            <h1 className="text-xl font-semibold text-gray-900">AI LaTeX Editor</h1>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setHasUnsavedChanges(true);
+              }}
+              className="text-lg font-medium text-gray-700 bg-transparent border-none outline-none hover:bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 transition-colors"
+            />
+            {hasUnsavedChanges && (
+              <span className="text-sm text-orange-600 font-medium">Unsaved changes</span>
+            )}
+          </div>
+
+          <button
+            onClick={saveDocument}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            Save
+          </button>
+        </header>
+
+        {/* Content area */}
+        <div className="flex flex-1 overflow-hidden">
           <ResizablePanes
-            defaultLeftWidth={65}
             left={
-              <PDFViewer
-                pdfBase64={compileResult?.pdf_base64 || null}
-                errorLog={compileResult?.error_log || ''}
-                loading={compiling}
-                onFixErrors={handleFixErrors}
-                fixingErrors={fixingErrors}
+              <LaTeXEditor
+                content={content}
+                onChange={handleContentChange}
+                onCompile={handleCompile}
+                compiling={compiling}
+                hasErrors={!!compileResult?.error_log}
               />
             }
-            right={<AIAssistant onInsertCode={handleInsertCode} />}
+            right={
+              <ResizablePanes
+                defaultLeftWidth={65}
+                left={
+                  <PDFViewer
+                    pdfBase64={compileResult?.pdf_base64 || null}
+                    errorLog={compileResult?.error_log || ''}
+                    loading={compiling}
+                    onFixErrors={handleFixErrors}
+                    fixingErrors={fixingErrors}
+                  />
+                }
+                right={<AIAssistant onInsertCode={handleInsertCode} />}
+              />
+            }
           />
-        }
-      />
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
   );
 }
 
