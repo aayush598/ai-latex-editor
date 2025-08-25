@@ -5,3 +5,5 @@ pydantic
 pydantic-settings
 google-genai
 sympy
+supabase
+python-jose

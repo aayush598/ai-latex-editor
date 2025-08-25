@@ -97,3 +97,36 @@ def delete_comment(comment_id: int) -> bool:
     deleted = cursor.rowcount > 0
     conn.close()
     return deleted
+
+# --- USERS CRUD ---
+
+def get_or_create_user(supabase_uid: str, email: str, provider: str) -> dict:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id, supabase_uid, email, provider, role FROM users WHERE supabase_uid=?", (supabase_uid,))
+    row = cursor.fetchone()
+
+    if row:
+        conn.close()
+        return {"id": row[0], "supabase_uid": row[1], "email": row[2], "provider": row[3], "role": row[4]}
+
+    cursor.execute(
+        "INSERT INTO users (supabase_uid, email, provider) VALUES (?, ?, ?)",
+        (supabase_uid, email, provider)
+    )
+    conn.commit()
+    user_id = cursor.lastrowid
+    conn.close()
+    return {"id": user_id, "supabase_uid": supabase_uid, "email": email, "provider": provider, "role": "user"}
+
+
+def save_session(user_id: int, access_token: str, refresh_token: str, expires_at: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO sessions (user_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)",
+        (user_id, access_token, refresh_token, expires_at)
+    )
+    conn.commit()
+    conn.close()
