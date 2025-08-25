@@ -85,8 +85,9 @@ function App() {
     </header>
 
     {/* Content area fills rest of screen */}
-    <div className="flex flex-1 overflow-hidden">
+    <div className="overflow-hidden">
       <ResizablePanes
+        defaultLeftWidth={45}
         left={
           <LaTeXEditor
             content={content}
@@ -98,7 +99,7 @@ function App() {
         }
         right={
           <ResizablePanes
-            defaultLeftWidth={65}
+            defaultLeftWidth={60}
             left={
               <PDFViewer
                 pdfBase64={compileResult?.pdf_base64 || null}

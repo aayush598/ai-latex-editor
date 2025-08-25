@@ -333,7 +333,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onInsertCode }) => {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="E.g., Create a mathematical proof for the Pythagorean theorem..."
-                className="w-full h-24 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-40 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <button
@@ -634,13 +634,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onInsertCode }) => {
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
                 
-                <button
-                  onClick={insertCode}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                >
-                  <Send className="w-4 h-4" />
-                  Insert
-                </button>
+                {activeTab !== 'explain' && (
+                  <button
+                    onClick={insertCode}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                    Insert
+                  </button>
+                )}
               </div>
             </div>
           </div>
