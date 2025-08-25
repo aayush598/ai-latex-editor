@@ -108,7 +108,7 @@ export const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
         </div>
 
         {/* textarea */}
-        <div className="flex-1 relative overflow-auto">
+        <div className="flex-1 relative">
           <textarea
             ref={textRef}
             value={content}
