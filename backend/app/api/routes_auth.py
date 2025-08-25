@@ -9,7 +9,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 SUPABASE_URL = settings.SUPABASE_URL
 SUPABASE_KEY = settings.SUPABASE_ANON_KEY
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")  # frontend URL
+FRONTEND_URL = os.getenv("FRONTEND_URL")  # frontend URL
 
 supabase: Client = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_KEY)
 
