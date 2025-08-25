@@ -1,5 +1,5 @@
 // frontend/src/services/api.ts
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://ai-latex-editor.onrender.com';
 
 class ApiService {
   private getToken(): string | null {

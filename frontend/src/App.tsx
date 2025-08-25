@@ -67,7 +67,7 @@ function App() {
   });
 
   if (!supabaseUid) {
-    return <Login backendUrl="http://127.0.0.1:8000" />;
+    return <Login backendUrl="https://ai-latex-editor.onrender.com" />;
   }
 
   return (
