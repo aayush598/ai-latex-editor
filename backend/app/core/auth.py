@@ -1,25 +1,19 @@
-import os
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
-from jose import jwt, JWTError
 from app.db import crud
 
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
-oauth2_scheme = HTTPBearer()
+oauth2_scheme = HTTPBearer()  # still using Bearer token
 
 def verify_token(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token.credentials, SUPABASE_JWT_SECRET, algorithms=["HS256"])
-        uid: str = payload.get("sub")
-        email: str = payload.get("email")
-        provider: str = payload.get("provider", "oauth")
+    """
+    Verify that the provided token matches a supabase_uid in the local users table.
+    The token is a simple string equal to supabase_uid.
+    """
+    supabase_uid = token.credentials  # token is directly the supabase_uid
 
-        if uid is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    # Check user exists in local DB
+    user = crud.get_user_by_uid(supabase_uid)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token or user not found")
 
-        # Ensure user exists locally
-        user = crud.get_or_create_user(uid, email, provider)
-        return user
-
-    except JWTError:
-        raise HTTPException(status_code=403, detail="Invalid credentials")
+    return user

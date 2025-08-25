@@ -2,55 +2,78 @@ import sqlite3
 from typing import List, Optional
 from app.models.document import DB_PATH
 
-def create_document(title: str, content: str) -> int:
+def create_document(title: str, content: str, supabase_uid: str) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO documents (title, content) VALUES (?, ?)", (title, content))
+    cursor.execute(
+        "INSERT INTO documents (title, content, supabase_uid) VALUES (?, ?, ?)",
+        (title, content, supabase_uid)
+    )
     conn.commit()
     doc_id = cursor.lastrowid
     conn.close()
     return doc_id
 
-def get_document(doc_id: int) -> Optional[dict]:
+def get_document(doc_id: int, supabase_uid: str) -> Optional[dict]:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, title, content FROM documents WHERE id=?", (doc_id,))
+    cursor.execute(
+        "SELECT id, title, content, supabase_uid FROM documents WHERE id=? AND supabase_uid=?",
+        (doc_id, supabase_uid)
+    )
     row = cursor.fetchone()
     conn.close()
-    return {"id": row[0], "title": row[1], "content": row[2]} if row else None
+    return {"id": row[0], "title": row[1], "content": row[2], "supabase_uid": row[3]} if row else None
 
-def get_all_documents() -> List[dict]:
+def get_all_documents(supabase_uid: str) -> List[dict]:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, title, content FROM documents")
+    cursor.execute(
+        "SELECT id, title, content, supabase_uid FROM documents WHERE supabase_uid=?",
+        (supabase_uid,)
+    )
     rows = cursor.fetchall()
     conn.close()
-    return [{"id": r[0], "title": r[1], "content": r[2]} for r in rows]
+    return [{"id": r[0], "title": r[1], "content": r[2], "supabase_uid": r[3]} for r in rows]
 
-def update_document(doc_id: int, title: Optional[str], content: Optional[str]) -> bool:
+def update_document(doc_id: int, supabase_uid: str, title: Optional[str], content: Optional[str]) -> bool:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id FROM documents WHERE id=?", (doc_id,))
+    # Only update if the document belongs to the user
+    cursor.execute(
+        "SELECT id FROM documents WHERE id=? AND supabase_uid=?",
+        (doc_id, supabase_uid)
+    )
     if not cursor.fetchone():
         conn.close()
         return False
 
     if title:
-        cursor.execute("UPDATE documents SET title=? WHERE id=?", (title, doc_id))
+        cursor.execute(
+            "UPDATE documents SET title=? WHERE id=? AND supabase_uid=?",
+            (title, doc_id, supabase_uid)
+        )
     if content:
-        cursor.execute("UPDATE documents SET content=? WHERE id=?", (content, doc_id))
+        cursor.execute(
+            "UPDATE documents SET content=? WHERE id=? AND supabase_uid=?",
+            (content, doc_id, supabase_uid)
+        )
     conn.commit()
     conn.close()
     return True
 
-def delete_document(doc_id: int) -> bool:
+def delete_document(doc_id: int, supabase_uid: str) -> bool:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM documents WHERE id=?", (doc_id,))
+    cursor.execute(
+        "DELETE FROM documents WHERE id=? AND supabase_uid=?",
+        (doc_id, supabase_uid)
+    )
     conn.commit()
     deleted = cursor.rowcount > 0
     conn.close()
     return deleted
+
 
 # ---- COMMENTS CRUD ----
 
@@ -130,3 +153,25 @@ def save_session(user_id: int, access_token: str, refresh_token: str, expires_at
     )
     conn.commit()
     conn.close()
+
+def get_user_by_uid(supabase_uid: str) -> dict | None:
+    """
+    Return user dict if supabase_uid exists in users table, else None.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, supabase_uid, email, provider, role FROM users WHERE supabase_uid=?",
+        (supabase_uid,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row[0],
+            "supabase_uid": row[1],
+            "email": row[2],
+            "provider": row[3],
+            "role": row[4],
+        }
+    return None

@@ -9,10 +9,13 @@ def init_db():
         CREATE TABLE IF NOT EXISTS documents (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
-            content TEXT NOT NULL
+            content TEXT NOT NULL,
+            supabase_uid TEXT NOT NULL,  -- new column
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(supabase_uid) REFERENCES users(supabase_uid)
         )
-                   
     """)
+
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS comments (
