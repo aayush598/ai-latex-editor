@@ -1,40 +1,74 @@
+// frontend/src/services/api.ts
 const API_BASE = 'http://127.0.0.1:8000';
 
 class ApiService {
+  private getToken(): string | null {
+    // token is the supabase_uid stored in localStorage
+    return localStorage.getItem('supabase_uid');
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE}${endpoint}`;
+
+    // default headers
+    const defaultHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // include auth header if token present
+    const token = this.getToken();
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+
+    // merge headers (options.headers may be undefined)
+    const mergedHeaders = {
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string> | undefined),
+    };
+
     const config: RequestInit = {
       mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options.headers,
-      },
+      headers: mergedHeaders,
       ...options,
     };
 
     try {
       const response = await fetch(url, config);
-      
+
+      // If unauthorized, clear stored session and redirect to login
+      if (response.status === 401) {
+        // remove stored uid
+        localStorage.removeItem('supabase_uid');
+        // redirect to frontend root so Login component shows
+        try { window.location.href = '/'; } catch (e) {}
+        throw new Error('Unauthorized — session cleared. Please sign in again.');
+      }
+
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
           const errorData = await response.json();
           if (errorData.detail) {
-            errorMessage = Array.isArray(errorData.detail) 
-              ? errorData.detail.map((e: any) => e.msg).join(', ')
+            errorMessage = Array.isArray(errorData.detail)
+              ? errorData.detail.map((e: any) => (e.msg ? e.msg : JSON.stringify(e))).join(', ')
               : errorData.detail;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
           }
         } catch {
-          // If we can't parse the error response, use the status message
+          // If we can't parse response JSON, keep generic message
         }
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      // Some endpoints return empty bodies (DELETE). Try to parse JSON safely
+      const text = await response.text();
+      return text ? JSON.parse(text) : ({} as T);
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
       throw error;

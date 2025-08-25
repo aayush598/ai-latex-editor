@@ -1,3 +1,4 @@
+// frontend/src/components/DocumentSidebar.tsx
 import React, { useState, useEffect } from 'react';
 import { File, Plus, Search, Trash2, Edit3, Loader2 } from 'lucide-react';
 import { apiService } from '../services/api';
@@ -22,14 +23,21 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
 
   useEffect(() => {
     loadDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDocuments = async () => {
+    setLoading(true);
     try {
       const docs = await apiService.getDocuments();
       setDocuments(docs);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load documents:', error);
+      // if unauthorized, apiService will have already redirected to login
+      if (error?.message && error.message.toLowerCase().includes('unauthorized')) {
+        alert('Session expired. Please sign in again.');
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -47,6 +55,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
       }
     } catch (error) {
       console.error('Failed to delete document:', error);
+      alert('Failed to delete document. Please try again.');
     }
   };
 
@@ -59,11 +68,12 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
         title,
         content: doc.content,
       });
-      
-      setDocuments(docs => docs.map(d => d.id === docId ? updated : d));
+
+      setDocuments(docs => docs.map(d => (d.id === docId ? updated : d)));
       setEditingTitle(null);
     } catch (error) {
       console.error('Failed to rename document:', error);
+      alert('Failed to rename document. Please try again.');
     }
   };
 
@@ -91,7 +101,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
             <Plus className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -122,7 +132,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
                 onClick={() => onSelectDocument(doc)}
               >
                 <File className="w-4 h-4 flex-shrink-0 text-gray-400" />
-                
+
                 {editingTitle === doc.id ? (
                   <input
                     type="text"
