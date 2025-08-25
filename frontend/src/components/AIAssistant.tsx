@@ -37,7 +37,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onInsertCode }) => {
   const [lhs, setLhs] = useState('');
   const [rhs, setRhs] = useState('');
   const [csvData, setCsvData] = useState('');
-  const [plotData, setPlotData] = useState('');
   const [diagramPrompt, setDiagramPrompt] = useState('');
   const [bibtexId, setBibtexId] = useState('');
   const [figureCode, setFigureCode] = useState('');
