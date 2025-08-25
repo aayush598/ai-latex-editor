@@ -1,27 +1,27 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from supabase import create_client, Client
 import os
 from app.db import crud
-from app.core.auth import verify_token
 from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 SUPABASE_URL = settings.SUPABASE_URL
 SUPABASE_KEY = settings.SUPABASE_ANON_KEY
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")  # frontend URL
 
 supabase: Client = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_KEY)
 
 @router.get("/signin/{provider}")
 def signin(provider: str, request: Request):
-    # provider = "github" | "google" | "facebook"
-    redirect_to = str(request.base_url) + "auth/callback"
+    redirect_to = f"{request.base_url}auth/callback"
     res = supabase.auth.sign_in_with_oauth({
         "provider": provider,
         "options": {"redirect_to": redirect_to}
     })
     return RedirectResponse(res.url)
+
 
 @router.get("/callback")
 def callback(request: Request):
@@ -40,7 +40,7 @@ def callback(request: Request):
         provider=user.app_metadata.get("provider", "oauth")
     )
 
-    # Store session
+    # Store session in database
     crud.save_session(
         user_id=local_user["id"],
         access_token=session.access_token,
@@ -48,8 +48,14 @@ def callback(request: Request):
         expires_at=str(session.expires_at)
     )
 
-    return {"message": "Login successful", "user": local_user}
-
-@router.get("/me")
-def me(user=Depends(verify_token)):
-    return {"user": user}
+    # Redirect to frontend and store supabase_uid in cookie
+    response = RedirectResponse(f"{FRONTEND_URL}")
+    response.set_cookie(
+        key="supabase_uid",
+        value=local_user["supabase_uid"],
+        httponly=False,  # frontend JS can access it
+        max_age=60*60*24*7  # 7 days
+    )
+    # Redirect to frontend with supabase_uid in URL
+    redirect_url = f"{FRONTEND_URL}?supabase_uid={local_user['supabase_uid']}"
+    return RedirectResponse(redirect_url)
