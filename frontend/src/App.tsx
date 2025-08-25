@@ -8,6 +8,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDocumentHandlers } from './hooks/useDocumentHandlers';
 import { DEFAULT_APP_TEMPLATE } from './constants/newDocumentTemplate';
 import { Login } from './components/Login';
+import { UserMenu } from './components/UserMenu';
 
 function App() {
   const [supabaseUid, setSupabaseUid] = useState<string | null>(null);
@@ -104,7 +105,9 @@ function App() {
             >
               Save
             </button>
+            <UserMenu />
           </div>
+
         </header>
 
         <div className="overflow-hidden">
