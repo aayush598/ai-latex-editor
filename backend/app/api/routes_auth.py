@@ -42,25 +42,6 @@ def callback(request: Request):
         provider=user.app_metadata.get("provider", "oauth")
     )
 
-    # (Optional) Save session in DB if you need it
-    # crud.save_session(
-    #     user_id=local_user["id"],
-    #     access_token=session.access_token,
-    #     refresh_token=session.refresh_token,
-    #     expires_at=str(session.expires_at)
-    # )
-
-    # Instead of passing code back, redirect only with supabase_uid
+    # ✅ Redirect to frontend with supabase_uid in query string
     redirect_url = f"{FRONTEND_URL}?supabase_uid={local_user['supabase_uid']}"
-    response = RedirectResponse(redirect_url)
-
-    # Also set cookie for frontend usage (if desired)
-    response.set_cookie(
-        key="supabase_uid",
-        value=local_user["supabase_uid"],
-        httponly=False,  # JS can read it
-        max_age=60*60*24*7,  # 7 days
-        samesite="lax",
-        secure=True,  # should be True in production with HTTPS
-    )
-    return response
+    return RedirectResponse(url=redirect_url)
