@@ -20,7 +20,10 @@ def signin(provider: str, request: Request):
     redirect_to = f"{BACKEND_URL}/auth/callback"
     res = supabase.auth.sign_in_with_oauth({
         "provider": provider,
-        "options": {"redirect_to": redirect_to}
+        "options": {
+            "redirect_to": redirect_to,
+            "query_params": {"prompt": "select_account"}
+            }
     })
     return RedirectResponse(res.url)
 
