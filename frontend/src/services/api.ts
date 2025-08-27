@@ -1,31 +1,30 @@
-// frontend/src/services/api.ts
 const API_BASE = 'https://ai-latex-editor.onrender.com';
 
 class ApiService {
-  private getToken(): string | null {
-    // token is the supabase_uid stored in localStorage
+  private getUid(): string | null {
     return localStorage.getItem('supabase_uid');
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    includeUidInQuery: boolean = false
   ): Promise<T> {
-    const url = `${API_BASE}${endpoint}`;
+    // Append supabase_uid to query params if needed
+    let url = `${API_BASE}${endpoint}`;
+    const uid = this.getUid();
 
-    // default headers
+    if (includeUidInQuery && uid) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}supabase_uid=${encodeURIComponent(uid)}`;
+    }
+
+    // Default headers
     const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    // include auth header if token present
-    const token = this.getToken();
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-
-    // merge headers (options.headers may be undefined)
     const mergedHeaders = {
       ...defaultHeaders,
       ...(options.headers as Record<string, string> | undefined),
@@ -40,15 +39,6 @@ class ApiService {
     try {
       const response = await fetch(url, config);
 
-      // If unauthorized, clear stored session and redirect to login
-      if (response.status === 401) {
-        // remove stored uid
-        localStorage.removeItem('supabase_uid');
-        // redirect to frontend root so Login component shows
-        try { window.location.href = '/'; } catch (e) {}
-        throw new Error('Unauthorized — session cleared. Please sign in again.');
-      }
-
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
@@ -61,12 +51,11 @@ class ApiService {
             errorMessage = errorData.message;
           }
         } catch {
-          // If we can't parse response JSON, keep generic message
+          // ignore parsing error
         }
         throw new Error(errorMessage);
       }
 
-      // Some endpoints return empty bodies (DELETE). Try to parse JSON safely
       const text = await response.text();
       return text ? JSON.parse(text) : ({} as T);
     } catch (error) {
@@ -80,19 +69,21 @@ class ApiService {
     return this.request<string>('/health');
   }
 
-  // Document operations
+  // --- Documents ---
   async getDocuments(): Promise<import('../types/api').Document[]> {
-    return this.request<import('../types/api').Document[]>('/documents/');
+    return this.request<import('../types/api').Document[]>('/documents/', {}, true);
   }
 
   async getDocument(id: number): Promise<import('../types/api').Document> {
-    return this.request<import('../types/api').Document>(`/documents/${id}`);
+    return this.request<import('../types/api').Document>(`/documents/${id}`, {}, true);
   }
 
   async createDocument(data: import('../types/api').DocumentInput): Promise<import('../types/api').Document> {
+    // must include supabase_uid in body
+    const uid = this.getUid();
     return this.request<import('../types/api').Document>('/documents/', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, supabase_uid: uid }),
     });
   }
 
@@ -100,19 +91,17 @@ class ApiService {
     return this.request<import('../types/api').Document>(`/documents/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
-    });
+    }, true);
   }
 
   async deleteDocument(id: number): Promise<string> {
     return this.request<string>(`/documents/${id}`, {
       method: 'DELETE',
-    });
+    }, true);
   }
 
-  // Compilation
-  async compileDocument(
-    content: string
-  ): Promise<import('../types/api').CompileResponse> {
+  // --- Compilation ---
+  async compileDocument(content: string): Promise<import('../types/api').CompileResponse> {
     const result = await this.request<import('../types/api').CompileResponse>(
       '/compile/',
       {
@@ -121,7 +110,6 @@ class ApiService {
       }
     );
 
-    // Log similar to index.ts
     console.log("✅ API Response:");
     console.log("PDF Base64:", result.pdf_base64?.slice(0, 100) + "...");
     console.log("Error Log:", result.error_log || "No errors");
@@ -136,7 +124,7 @@ class ApiService {
     });
   }
 
-  // AI features
+  // --- AI features ---
   async generateLatex(prompt: string): Promise<import('../types/api').AIGenerateResponse> {
     return this.request<import('../types/api').AIGenerateResponse>('/ai/generate-latex', {
       method: 'POST',
@@ -151,7 +139,7 @@ class ApiService {
     });
   }
 
-  // References
+  // --- References ---
   async fetchBibtex(identifier: string): Promise<import('../types/api').BibtexResponse> {
     return this.request<import('../types/api').BibtexResponse>('/references/fetch-bibtex', {
       method: 'POST',
@@ -166,7 +154,7 @@ class ApiService {
     });
   }
 
-  // Math intelligence
+  // --- Math intelligence ---
   async verifyEquation(lhs: string, rhs: string): Promise<import('../types/api').VerifyEquationResponse> {
     return this.request<import('../types/api').VerifyEquationResponse>('/math/verify-equation', {
       method: 'POST',
@@ -187,7 +175,8 @@ class ApiService {
       body: JSON.stringify({ expression }),
     });
   }
-  // Figures and tables
+
+  // --- Figures and tables ---
   async generateTable(data: import('../types/api').GenerateTableRequest): Promise<import('../types/api').LatexResponse> {
     return this.request<import('../types/api').LatexResponse>('/figures/generate-table', {
       method: 'POST',
@@ -209,7 +198,7 @@ class ApiService {
     });
   }
 
-  // Accessibility
+  // --- Accessibility ---
   async addAltText(figureCode: string, context?: string, maxLength?: number): Promise<{ alt_text: string }> {
     return this.request<{ alt_text: string }>('/accessibility/add-alt-text', {
       method: 'POST',
@@ -241,7 +230,7 @@ class ApiService {
     });
   }
 
-  // Collaboration
+  // --- Collaboration ---
   async getDiff(oldText: string, newText: string): Promise<{ diff: string }> {
     return this.request<{ diff: string }>('/collaboration/diff', {
       method: 'POST',
@@ -267,7 +256,8 @@ class ApiService {
       body: JSON.stringify({ old_text: oldText, new_text: newText }),
     });
   }
-  // Comments
+
+  // --- Comments ---
   async addComment(data: import('../types/api').CommentRequest): Promise<import('../types/api').CommentResponse> {
     return this.request<import('../types/api').CommentResponse>('/collaboration/comment', {
       method: 'POST',

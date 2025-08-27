@@ -4,6 +4,7 @@ from typing import Optional
 class DocumentBase(BaseModel):
     title: str
     content: str
+    supabase_uid: str
 
 class DocumentCreate(DocumentBase):
     pass
