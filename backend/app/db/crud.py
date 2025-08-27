@@ -144,15 +144,15 @@ def get_or_create_user(supabase_uid: str, email: str, provider: str) -> dict:
     return {"id": user_id, "supabase_uid": supabase_uid, "email": email, "provider": provider, "role": "user"}
 
 
-def save_session(user_id: int, access_token: str, refresh_token: str, expires_at: str):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO sessions (user_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)",
-        (user_id, access_token, refresh_token, expires_at)
-    )
-    conn.commit()
-    conn.close()
+# def save_session(user_id: int, access_token: str, refresh_token: str, expires_at: str):
+#     conn = sqlite3.connect(DB_PATH)
+#     cursor = conn.cursor()
+#     cursor.execute(
+#         "INSERT INTO sessions (user_id, access_token, refresh_token, expires_at) VALUES (?, ?, ?, ?)",
+#         (user_id, access_token, refresh_token, expires_at)
+#     )
+#     conn.commit()
+#     conn.close()
 
 def get_user_by_uid(supabase_uid: str) -> dict | None:
     """

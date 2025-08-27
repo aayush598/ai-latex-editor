@@ -40,18 +40,18 @@ def init_db():
         )
     """)
 
-    # --- Sessions table ---
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            access_token TEXT NOT NULL,
-            refresh_token TEXT,
-            expires_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    """)
+    # # --- Sessions table ---
+    # cursor.execute("""
+    #     CREATE TABLE IF NOT EXISTS sessions (
+    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #         user_id INTEGER NOT NULL,
+    #         access_token TEXT NOT NULL,
+    #         refresh_token TEXT,
+    #         expires_at TIMESTAMP,
+    #         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    #         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    #     )
+    # """)
     conn.commit()
     conn.close()
 

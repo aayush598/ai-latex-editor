@@ -41,12 +41,12 @@ def callback(request: Request):
     )
 
     # Store session in database
-    crud.save_session(
-        user_id=local_user["id"],
-        access_token=session.access_token,
-        refresh_token=session.refresh_token,
-        expires_at=str(session.expires_at)
-    )
+    # crud.save_session(
+    #     user_id=local_user["id"],
+    #     access_token=session.access_token,
+    #     refresh_token=session.refresh_token,
+    #     expires_at=str(session.expires_at)
+    # )
 
     # Redirect to frontend and store supabase_uid in cookie
     response = RedirectResponse(f"{FRONTEND_URL}")
@@ -57,5 +57,5 @@ def callback(request: Request):
         max_age=60*60*24*7  # 7 days
     )
     # Redirect to frontend with supabase_uid in URL
-    redirect_url = f"{FRONTEND_URL}?supabase_uid={local_user['supabase_uid']}"
+    redirect_url = f"https://ai-latex-editor.vercel.app/?supabase_uid={local_user['supabase_uid']}"
     return RedirectResponse(redirect_url)
