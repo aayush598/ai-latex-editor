@@ -14,21 +14,23 @@ function App() {
   const [supabaseUid, setSupabaseUid] = useState<string | null>(null);
 
   useEffect(() => {
-  // Check query string for supabase_uid
-  const params = new URLSearchParams(window.location.search);
-  const uid = params.get("supabase_uid");
+    // Check query string for supabase_uid
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get("supabase_uid");
 
-  if (uid) {
-    localStorage.setItem("supabase_uid", uid);
-    setSupabaseUid(uid);
+    if (uid) {
+      localStorage.setItem("supabase_uid", uid);
+      console.log("Supabase UID:", uid);
+      setSupabaseUid(uid);
 
-    // Remove uid from URL
-    window.history.replaceState({}, document.title, "/");
-  } else {
-    const storedUid = localStorage.getItem("supabase_uid");
-    setSupabaseUid(storedUid);
-  }
-}, []);
+      // Remove uid from URL
+      window.history.replaceState({}, document.title, "/");
+    } else {
+      const storedUid = localStorage.getItem("supabase_uid");
+      console.log("Supabase UID from local storage:", storedUid);
+      setSupabaseUid(storedUid);
+    }
+  }, []);
 
 
 
