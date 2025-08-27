@@ -19,7 +19,6 @@ interface KeyboardShortcutsProps {
 export function useKeyboardShortcuts({
   currentDocument,
   title,
-  content,
   setTitle,
   setContent,
   setCurrentDocument,
@@ -33,28 +32,27 @@ export function useKeyboardShortcuts({
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes('MAC');
       const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
-      if (!ctrlOrCmd) return;
 
-      // Save
-      if (e.key.toLowerCase() === 's') {
+      // Save (Ctrl/Cmd + S)
+      if (ctrlOrCmd && e.key.toLowerCase() === 's') {
         e.preventDefault();
         saveDocument();
       }
 
-      // Compile
-      if (e.key === 'Enter') {
+      // Compile (Ctrl/Cmd + Enter)
+      if (ctrlOrCmd && e.key === 'Enter') {
         e.preventDefault();
         handleCompile();
       }
 
-      // New file
-      if (e.altKey && e.key.toLowerCase() === 'n') {
+      // New file (Ctrl/Cmd + Shift + N)
+      if (ctrlOrCmd && e.altKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         handleNewDocument();
       }
 
-      // Rename
-      if (e.altKey && e.key.toLowerCase() === 'r') {
+      // Rename (F2)
+      if (e.key === 'F2') {
         e.preventDefault();
         const newTitle = prompt('Enter new file name:', title);
         if (newTitle) {
@@ -63,8 +61,8 @@ export function useKeyboardShortcuts({
         }
       }
 
-      // Delete
-      if (e.shiftKey && e.key.toLowerCase() === 'd') {
+      // Delete (Ctrl/Cmd + Delete)
+      if (ctrlOrCmd && e.key === 'Delete') {
         e.preventDefault();
         if (currentDocument && confirm(`Delete "${title}"? This cannot be undone.`)) {
           apiService.deleteDocument(currentDocument.id).then(() => {
@@ -76,12 +74,6 @@ export function useKeyboardShortcuts({
         }
       }
 
-      // Search
-      if (e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        const query = prompt('Search for file name:');
-        if (query) console.log('Searching for file:', query);
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -89,7 +81,6 @@ export function useKeyboardShortcuts({
   }, [
     currentDocument,
     title,
-    content,
     saveDocument,
     handleCompile,
     handleNewDocument,
