@@ -15,24 +15,14 @@ export const Login: React.FC<LoginProps> = ({ backendUrl }) => {
         <h1 className="text-2xl font-bold mb-6">Welcome to AI LaTeX Editor</h1>
         <p className="mb-4">Please sign in to continue</p>
         <div className="flex flex-col gap-3">
-          <button
-            onClick={() => handleSignIn('github')}
-            className="px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-          >
-            Sign in with GitHub
-          </button>
+  
           <button
             onClick={() => handleSignIn('google')}
             className="px-6 py-3 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           >
             Sign in with Google
           </button>
-          <button
-            onClick={() => handleSignIn('facebook')}
-            className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Sign in with Facebook
-          </button>
+         
         </div>
       </div>
     </div>
